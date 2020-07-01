@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="manifest" href="/manifest.json">
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+        <meta name="theme-color" content="#ffffff">
+        <title>OS Map Viewer</title>
+        <link rel="stylesheet" type="text/css" href="assets/css/normalize.css">
+        <link rel="stylesheet" href="assets/css/bootstrap.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/openlayers/4.1.0/ol.css">
+        <link rel="stylesheet" href="assets/css/mapViewer.css">
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/openlayers/4.1.0/ol.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.6/proj4.js"></script>
+        <script src="assets/dist/built.min.js"></script>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+    <div id="mask"></div>
+    <header>
+        <figure id="logo">
+            <img src="assets/images/logo.png" alt="The AA">
+        </figure>
+    </header>
+    <div id="sidebar-wrapper" class="sidebar">
+        <ul id="actionMenu" class="actionMenu">
+            <li class="tabLink activeTabLink" data-content="search">Search</li>
+            <li class="tabLink" data-content="coordinates">Coordinates</li>
+            <li class="tabLink" data-content="scale">Scales</li>
+        </ul>
+        <div id="sidebar-content" class="sidebar-content">
+            <div id="searchPanel" class="tabContent">
+                <form id="search-form" class="sidebarForm">
+                    <input id="search-query" type="text" name="textSearch" class="textField" placeholder="Where are you looking for?"> 
+                    <div class="submitSearch">
+                        <input id="searchButton" type="submit" name="submitSearch" class="button" value>
+                    </div>  
+                </form>
+                <!--<strong>NB: </strong>When searching for postcodes spaces do not affect performance-->
+                <div id="searchResults" class="searchResults">
+                    <ul id="Scroller-Container" class="Scroller-Container"></ul>
+                </div>      
+            </div>
+            <div id="coordinatesPanel" class="tabContent">
+            <form id="coordinates" class="sidebarForm" method="post">
+                <fieldset name="gridReference">
+                    <input type="text" name="gridRef" class="textField" id="gridRef" placeholder="OS Grid Reference" />
+                    <div class="test">OR</div>
+                </fieldset>
+                <fieldset name="eastingNorthing">
+                    <input type="text" name="easting" class="textField" id="easting" placeholder="Easting" />
+                    <input type="text" name="northing" class="textField" id="northing" placeholder="Northing" />
+                    <div class="test">OR</div>
+                </fieldset>
+                <fieldset name="latlon">
+                    <input type="text" name="latWGS84" class="textField" id="latWGS84" placeholder="Latitude" />
+                    <input type="text" name="lonWGS84" class="textField" id="lonWGS84" placeholder="Longitude" />
+                </fieldset>
+                <div class="test">
+                    <button id="convert" class="button tertiary ra" name="convert_btn">Convert</button>
+                    <button id="reset_btn" class="button tertiary ra" type="button" value="Reset" name="reset_btn">Reset</button>
+                </div>
+            </form>
+            </div>
+            <div id="scalePanel"  class="tabContent">
+                <form>
+                    <fieldset>
+                        <label for="sourceScale">Source Scale = 1:</label>
+                        <input type="text" id="sourceScale" class="textField" name="sourceScale" value=""/>
+                        <br>
+                        <label for="transformValue">Transformation (%)</label>
+                        <input type="text" id="transformValue" class="textField" name="transformValue" value=""/>
+                        <div class="test">
+                            <button type="button" class="button tertiary ra" onclick="rescale()">Transform</button>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <label for="mm2km">1km = </label>
+                        <input type="text" id="mm2km" class="textField" name="mm2km" value=""/>
+                        <br>
+                        <label for="km2mm">km per mm</label>
+                        <input type="text" id="km2mm" class="textField" name="km2mm" value="" />
+                        <div class="test">
+                            <button type="button" class="button tertiary ra" onclick="calculate()">Calculate</button>
+                        </div>
+                        <br>
+                        <label for="finalScale">Final Scale = 1: </label>
+                        <input type="text" id="finalScale" class="textField textInput" name="finalScale" value=""/>
+                        <br/>
+                        <div class="test">
+                        <button type='button' class="button tertiary ra" onclick="resetForm()">Reset</button>
+                        </div>
+                    </fieldset>
+                </form>
+
+               <!-- <form id="uploadForm" class="box" method="post" action="" enctype="multipart/form-data">
+                    <div class="box__input">
+                        <span class="glyphicon glyphicon-download-alt box__icon"></span>
+                        <input class="box__file" type="file" name="files[]" id="file" data-multiple-caption="{count} files selected" multiple />
+                        <label for="file" class="text-center"><strong>Choose a file</strong><span class="box__dragndrop"> or drag it here</span>.</label>
+                        <button class="box__button" type="submit">Upload</button>
+                    </div>
+                    <div class="box__uploading">Uploading&hellip;</div>
+                    <div class="box__success">Done!</div>
+                    <div class="box__error">Error! <span></span>.</div>
+                </form>
+                <strong>NB: </strong>At the moment only GPX files are supported, other formats to follow soon.-->
+            </div>
+        </div>
+    </div>
+    <div id="sidebar-menu" class="sidebarMenu shadow">
+        <div id="sidebar-icon" class="sidebarIcon">
+            <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+        </div>
+        <div id="customZoomWrapper">
+            <div id="customZoom">
+                <div id="zoomInButton">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                </div>
+                <div id="zoomOutButton">
+                    <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
+                </div>   
+            </div>
+        </div>
+    </div>
+   
+    <div id="map" class="map"></div>
+    <script type='text/javascript' src='assets/js/utilScale.js'></script>
+    <script src="assets/js/modalBox.js"></script>
+    <script src="assets/js/geoserver-ol3.js"></script>
+    <script src="assets/js/aaMapViewer.js"></script>
+    </body>
+</html>
