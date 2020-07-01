@@ -7,7 +7,7 @@
  * @version 2
  */
 
-const NAMES_API_KEY = "1LjvRzpKwhw7HsYEtwMjSub8YrHaIMGE";
+const NAMES_API_KEY = "";
 var StartLocation = [463755, 152345],
     Layers = [];
 
