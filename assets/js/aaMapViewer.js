@@ -7,7 +7,7 @@
  * @version 3
  */
 
-const NAMES_API_KEY = "1LjvRzpKwhw7HsYEtwMjSub8YrHaIMGE";
+const NAMES_API_KEY = "";
 var map,
 	StartLocation = [465778, 154005],
 	Layers = [],
